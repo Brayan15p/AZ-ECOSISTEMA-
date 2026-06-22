@@ -156,7 +156,7 @@ npx supabase functions deploy record-audit
 | Supabase: schema + RLS + Edge Function ejemplo | ✅ Listo |
 | Push notifications | 🚧 Próximo (Expo Notifications + Supabase trigger) |
 | Tests E2E con Maestro | 🚧 Próximo |
-| Tests unitarios (`packages/shared`) | 🚧 Próximo |
+| Tests unitarios (`packages/shared`) | ✅ Listo (Jest, 33 tests) |
 | Sentry + PostHog | 🚧 Próximo |
 
 ## 📦 Identificadores
