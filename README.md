@@ -1,93 +1,165 @@
 # AZ Ecosistema
 
-App unificada de AZ CORPORATION para la gestión integral de residuos sólidos en Arauca. Incluye:
+App de AZ CORPORATION para la gestión integral de residuos sólidos en Arauca. Es un **monorepo** con dos apps que comparten lógica de negocio y un backend Supabase con seguridad por filas (RLS).
 
-- **Landing pública** (`/`) — página de marketing indexable, con SEO (meta tags, Open Graph, Twitter Card) y acceso a la app.
-- **AZ Neural Grid OS** — panel para operadores (IRSU, CCAR, supervisores), dentro de `/app`.
-- **AZ Mi Barrio** — app para los ciudadanos/hogares, dentro de `/app`.
-
-Ambos modos comparten las publicaciones (anuncios, campañas, contenido educativo) a través del mismo almacenamiento local.
-
-## Arquitectura
+## 🗺️ Estructura del monorepo
 
 ```
-src/
-  App.jsx                 # Rutas: "/" (Landing) y "/app" (selector de modo)
-  pages/
-    Landing.jsx            # Página pública con SEO
-    AppShell.jsx            # Selector Operador / Ciudadano (antes "AZEcosistema")
-  features/
-    operador/AZNeuralGridOS.jsx
-    ciudadano/AZMiBarrio.jsx
-  components/shared/        # StatCard, MiniBar, Badge, Tab, ScoreRing
-  lib/
-    theme.js                 # Paletas de color y design tokens (fuente única)
-    scoring.js                 # getScoreColor / getStatusLabel
-    useDocumentMeta.js          # Hook para <title>/meta por página
-  data/                        # Datos demo (INITIAL_DATA, DEMO_HOUSEHOLD)
-  assets/logos.js                # Logos en base64
-  storage-polyfill.js              # window.storage → localStorage
+AZ-ECOSISTEMA-/
+├── apps/
+│   ├── mobile/      # 📱 App nativa (Expo + React Native) → corre en Expo Go
+│   └── web/         # 🌐 Landing pública con SEO (Vite + React)
+├── packages/
+│   └── shared/      # 🧩 Lógica de negocio compartida (TypeScript puro)
+├── supabase/
+│   ├── migrations/  # 🗄️ Esquema + RLS policies
+│   ├── functions/   # ⚙️ Edge Functions (microservicios)
+│   └── config.toml
+└── .github/workflows/ci.yml
 ```
 
-La lógica de negocio (puntajes, penalizaciones, recompensas, publicaciones compartidas) es la misma que el componente original; solo se reorganizó en módulos por responsabilidad.
+## 📱 App móvil (apps/mobile) — Expo + React Native
 
-### SEO
+Esta es **la app principal**. Se ve en Expo Go y se empaqueta como nativa para iOS/Android.
 
-La landing (`/`) usa meta tags estáticos en `index.html` (description, Open Graph, Twitter Card, robots) más `useDocumentMeta` para actualizar `<title>` por ruta. Es una SPA sin SSR: cuando exista un dominio público definitivo, agrega `rel="canonical"` en `index.html` y un `sitemap.xml` en `public/`. Las rutas dentro de `/app` no necesitan SEO (son la app autenticada, no contenido público).
-
-### Despliegue web (landing pública)
-
-La app usa `react-router-dom` con rutas reales (`/`, `/app`), por lo que el hosting necesita redirigir cualquier ruta a `index.html` (ya incluido):
-
-- **Vercel**: `vercel.json` con rewrite a `/index.html`.
-- **Netlify**: `public/_redirects` con `/* /index.html 200`.
-
-Capacitor no necesita esto porque sirve un solo `index.html` local.
-
-## Desarrollo web
+### Visualizarla en Expo Go (lo más rápido)
 
 ```bash
+cd apps/mobile
 npm install
-npm run dev       # abre en http://localhost:5173
-npm run build     # genera la carpeta dist/
+cp .env.example .env   # llena con las credenciales de Supabase
+npm start
 ```
 
-## Empaquetar como app nativa (iOS / Android) con Capacitor
+Escanea el QR con la app **Expo Go** en tu celular (descárgala del App Store o Play Store). La app se carga en segundos, sin compilar nada.
 
-Las carpetas nativas `ios/` y `android/` no se versionan en el repo (son proyectos generados, con binarios). Se crean una sola vez en tu máquina:
+### Compilar para producción (APK / IPA)
 
 ```bash
+cd apps/mobile
+npx eas build --platform android   # genera APK/AAB
+npx eas build --platform ios       # requiere cuenta de Apple Developer
+```
+
+### Arquitectura interna
+
+```
+apps/mobile/
+├── app/                         # Rutas (Expo Router)
+│   ├── _layout.tsx               # Layout raíz: theme + auth init
+│   ├── index.tsx                  # Selector de modo (operador/ciudadano)
+│   ├── (ciudadano)/                # Tabs ciudadano: hogar, recompensas, noticias, perfil
+│   └── (operador)/                  # Stack operador: dashboard, hogares (WIP)
+├── src/
+│   ├── theme/                       # Design tokens + ThemeProvider (dark mode auto)
+│   ├── ui/                            # Atomic components: Text, Button, Card, Chip,
+│   │                                   #   ScoreRing, LevelBadge, ProgressBar, StatTile
+│   ├── lib/supabase.ts                  # Cliente Supabase con SecureStore
+│   └── state/sessionStore.ts            # Zustand store de sesión
+└── app.json, babel/metro/tsconfig
+```
+
+### Design system (resumen)
+
+- **Tokens** en `src/theme/tokens.ts`: paletas con 9 tonos, espaciado en grid 4pt, tipografía Major Third, sombras por nivel, motion curves de Material 3 / Apple HIG.
+- **Dark mode automático** desde el sistema operativo.
+- **Accesibilidad WCAG AA**: roles ARIA, contraste, tamaños táctiles ≥44pt, `accessibilityHint` en botones críticos.
+- **Haptics** en `<Button />` por defecto.
+- **Reanimated** para animaciones de 60fps (ScoreRing, ProgressBar).
+
+### Gamificación (Octalysis aplicado)
+
+| Driver | Implementación |
+|---|---|
+| Accomplishment | Niveles Bronce/Plata/Oro/Platino + badges desbloqueables |
+| Ownership | Puntos persistentes + historial visible |
+| Social Influence | Ranking del barrio (preparado en Supabase) |
+| Scarcity | Recompensas con `quotaRemaining` y `expiresIn` |
+| Loss Avoidance | Racha (streak) que se rompe sin auditorías buenas |
+| Variable Reward | Badges sorpresa + bonos al subir de nivel |
+
+Toda la lógica vive en `packages/shared/src/gamification.ts` para que el backend (Edge Functions) aplique las mismas reglas — single source of truth.
+
+## 🌐 Landing pública (apps/web) — Vite + React
+
+Página de marketing SEO-friendly. Sigue existiendo porque Expo no produce HTML indexable.
+
+```bash
+cd apps/web
 npm install
+npm run dev       # http://localhost:5173
 npm run build
-npx cap add android
-npx cap add ios
 ```
 
-A partir de ahí, cada vez que cambies el código web:
+Detalles SEO ya configurados: meta description, Open Graph, Twitter Card, robots.txt, semántica HTML.
 
-1. Compila el sitio web y sincroniza con los proyectos nativos:
+## 🧩 Shared (packages/shared)
 
-   ```bash
-   npm run build
-   npx cap sync
-   ```
+TypeScript puro, sin React, sin RN. Importable desde mobile, web y Edge Functions:
 
-2. **Android**: abre el proyecto en Android Studio y ejecuta/genera el APK o AAB.
+- `gamification.ts` — niveles, badges, cálculo de puntos por auditoría, racha.
+- `scoring.ts` — `statusFromScore`, umbrales.
+- `types.ts` — `Household`, `Publication`, `Reaction`, `Comment`.
 
-   ```bash
-   npm run cap:open:android
-   ```
+## 🗄️ Backend (Supabase)
 
-3. **iOS**: requiere macOS con Xcode y CocoaPods instalados.
+### Esquema y RLS
 
-   ```bash
-   cd ios/App && pod install && cd ../..
-   npm run cap:open:ios
-   ```
+Migración inicial en `supabase/migrations/20260101000000_init_schema.sql`. Resumen:
 
-   Desde Xcode puedes ejecutar en simulador/dispositivo o archivar para subir a App Store Connect (TestFlight / App Store).
+- Tablas: `profiles`, `households`, `audits`, `penalties`, `rewards`, `publications`, `publication_reactions`, `publication_comments`, `audit_log`.
+- **RLS habilitado en todas las tablas**. Cada política está declarada explícitamente — sin defaults permisivos.
+- **Roles** vía `app_role` enum: `admin`, `operador`, `irsu`, `ciudadano`.
+- **Helpers `SECURITY DEFINER`** (`current_role()`, `current_household_id()`) para evitar bypass por recursión RLS.
+- **Audit log inmutable** con triggers `SECURITY DEFINER`: cada cambio en `households`, `audits`, `penalties`, `rewards` queda registrado con actor + before/after en `audit_log` (solo `admin` puede leerlo).
 
-## Notas
+### Edge Functions (microservicios)
 
-- El identificador de la app es `com.azcorporation.ecosistema` (`capacitor.config.json`). Cámbialo antes de publicar si se requiere otro bundle ID.
-- Los datos (hogares, puntuaciones, publicaciones) se guardan en el almacenamiento local del dispositivo (`localStorage` vía `window.storage`, ver `src/storage-polyfill.js`). Para producción multi-usuario real se recomienda conectar un backend (Supabase, Firebase, etc.).
+`supabase/functions/record-audit` — ejemplo: un IRSU registra una auditoría → calcula puntos → actualiza puntaje del hogar con media móvil → (TODO: notifica push). Lógica sensible NUNCA en el cliente: el cliente solo ve el resultado.
+
+### Despliegue del backend
+
+```bash
+npx supabase login
+npx supabase link --project-ref TU-PROYECTO
+npx supabase db push                       # aplica migraciones
+npx supabase functions deploy record-audit
+```
+
+## 🔐 Seguridad
+
+- **JWT corto (15 min)** + refresh rotativo (configurado en `supabase/config.toml`).
+- **Tokens en Keychain/KeyStore** vía `expo-secure-store` (nunca en AsyncStorage).
+- **RLS estricto** + helpers `SECURITY DEFINER` + audit log inmutable.
+- **Edge Functions** validan rol desde la DB (no del JWT) antes de operar.
+- **CI con `gitleaks`** para detectar secrets en commits.
+- **MFA habilitable** (Supabase auth, hasta 5 factores).
+- **CSP estricta** y headers de seguridad: pendientes en el wrapper Capacitor/Expo cuando se publique a producción.
+
+> ⚠️ Esto es la base correcta. Una **auditoría de seguridad humana** profesional sigue siendo obligatoria antes de un lanzamiento real (especialmente porque hay efectos reales sobre la tarifa de aseo del ciudadano).
+
+## 🛠️ CI/CD
+
+`.github/workflows/ci.yml` ejecuta en cada push:
+- `apps/mobile`: typecheck con TS estricto.
+- `apps/web`: build de producción.
+- `security`: gitleaks + `npm audit`.
+
+## 🚧 Estado actual / próximas iteraciones
+
+| Área | Estado |
+|---|---|
+| Monorepo + shared package | ✅ Listo |
+| Design system + atomic components (mobile) | ✅ Listo |
+| Pantalla ciudadano (home con gamificación, recompensas, noticias, perfil) | ✅ Listo |
+| Pantalla operador completa (hogares, recicladores, penalizaciones, recompensas) | 🚧 En migración desde la app web |
+| Supabase: schema + RLS + Edge Function ejemplo | ✅ Listo |
+| Push notifications | 🚧 Próximo (Expo Notifications + Supabase trigger) |
+| Tests E2E con Maestro | 🚧 Próximo |
+| Tests unitarios (`packages/shared`) | 🚧 Próximo |
+| Sentry + PostHog | 🚧 Próximo |
+
+## 📦 Identificadores
+
+- `appId` (iOS bundle / Android package): `com.azcorporation.ecosistema`
+- Scheme deep-link: `azecosistema://`

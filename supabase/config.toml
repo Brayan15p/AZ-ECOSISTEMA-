@@ -1,0 +1,22 @@
+project_id = "az-ecosistema"
+
+[api]
+enabled = true
+
+[auth]
+enabled = true
+site_url = "azecosistema://"
+additional_redirect_urls = ["azecosistema://auth-callback"]
+jwt_expiry = 900           # 15 min — recomendado por OWASP ASVS
+refresh_token_rotation_enabled = true
+refresh_token_reuse_interval = 10
+
+[auth.email]
+enable_signup = false      # Usuarios se crean desde el panel operador o por invitación
+enable_confirmations = true
+
+[auth.mfa]
+max_enrolled_factors = 5
+
+[storage]
+file_size_limit = "5MiB"
