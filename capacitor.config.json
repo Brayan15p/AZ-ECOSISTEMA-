@@ -1,0 +1,12 @@
+{
+  "appId": "com.azcorporation.ecosistema",
+  "appName": "AZ Ecosistema",
+  "webDir": "dist",
+  "backgroundColor": "#1B3A5C",
+  "server": {
+    "androidScheme": "https"
+  },
+  "ios": {
+    "contentInset": "always"
+  }
+}
