@@ -26,6 +26,43 @@ function pointsForScore(score: number): number {
   return 0;
 }
 
+// Best-effort: una falla aquí nunca debe tumbar el registro de la auditoría.
+async function notifyHouseholdCitizens(
+  adminClient: ReturnType<typeof createClient>,
+  householdId: string,
+  newScore: number
+): Promise<void> {
+  try {
+    const { data: profiles } = await adminClient
+      .from("profiles")
+      .select("id")
+      .eq("household_id", householdId);
+    if (!profiles || profiles.length === 0) return;
+
+    const userIds = profiles.map((p: { id: string }) => p.id);
+    const { data: tokens } = await adminClient
+      .from("push_tokens")
+      .select("expo_push_token")
+      .in("user_id", userIds);
+    if (!tokens || tokens.length === 0) return;
+
+    const messages = tokens.map((t: { expo_push_token: string }) => ({
+      to: t.expo_push_token,
+      sound: "default",
+      title: "Tu hogar fue auditado",
+      body: `Nuevo puntaje: ${newScore}`
+    }));
+
+    await fetch("https://exp.host/--/api/v2/push/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(messages)
+    });
+  } catch {
+    // No-op: la notificación es best-effort.
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") {
@@ -108,7 +145,8 @@ Deno.serve(async (req) => {
     .update({ score: newScore, points: newPoints, last_audit_at: new Date().toISOString() })
     .eq("id", body.householdId);
 
-  // TODO: enviar push notification al ciudadano (notifications-service).
+  await notifyHouseholdCitizens(adminClient, body.householdId, newScore);
+
   return new Response(
     JSON.stringify({ ok: true, newScore, newPoints, pointsAwarded }),
     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
