@@ -17,7 +17,9 @@ const SECTIONS = [
   { key: "rewards", icon: "🏆", label: "Reconocimientos", hint: "Otorgar puntos y bonos" },
   { key: "operations", icon: "🚛", label: "Operaciones", hint: "Rutas y balance de masas" },
   { key: "publications", icon: "📢", label: "Publicaciones", hint: "Comunicados al barrio" },
-  { key: "logs", icon: "📋", label: "Bitácora", hint: "Trazabilidad de acciones" }
+  { key: "logs", icon: "📋", label: "Bitácora", hint: "Trazabilidad de acciones" },
+  { key: "guide", icon: "🧭", label: "Guía de clasificación", hint: "Árbol de decisión de residuos" },
+  { key: "ccar", icon: "🏭", label: "CCAR", hint: "Centros de acopio + registro diario" }
 ] as const;
 
 export default function OperadorHome() {

@@ -50,7 +50,8 @@ apps/mobile/
 │   ├── index.tsx                  # Selector de modo (operador/ciudadano)
 │   ├── (ciudadano)/                # Tabs ciudadano: hogar, recompensas, noticias, perfil
 │   └── (operador)/                  # Stack operador: dashboard, hogares, recicladores,
-│                                     #   penalizaciones, recompensas, operaciones, publicaciones, bitácora
+│                                     #   penalizaciones, recompensas, operaciones, publicaciones, bitácora,
+│                                     #   guía de clasificación, CCAR
 ├── src/
 │   ├── theme/                       # Design tokens + ThemeProvider (dark mode auto)
 │   ├── ui/                            # Atomic components: Text, Button, Card, Chip,
@@ -153,7 +154,7 @@ npx supabase functions deploy record-audit
 | Monorepo + shared package | ✅ Listo |
 | Design system + atomic components (mobile) | ✅ Listo |
 | Pantalla ciudadano (home con gamificación, recompensas, noticias, perfil) | ✅ Listo |
-| Pantalla operador completa (hogares, recicladores, penalizaciones, recompensas, operaciones, publicaciones, bitácora) | ✅ Listo |
+| Pantalla operador completa (hogares, recicladores, penalizaciones, recompensas, operaciones, publicaciones, bitácora, guía de clasificación, CCAR) | ✅ Listo |
 | Supabase: schema + RLS + Edge Function ejemplo | ✅ Listo |
 | Push notifications | ✅ Listo (Expo Notifications + tabla `push_tokens` + trigger en `record-audit`) |
 | Tests E2E con Maestro | 🚧 Próximo |
