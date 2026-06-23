@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Tokens semánticos de @az/ui-tokens expuestos como CSS variables.
+  NativeWind v4 soporta custom properties en React Native, así que las
+  clases `bg-background`, `text-text-primary`, etc. (definidas en
+  tailwind.config.ts) resuelven a estos valores y cambian solas en modo oscuro.
+*/
+@layer base {
+  :root {
+    --az-background: #f7f8fa;
+    --az-surface: #ffffff;
+    --az-surface-elevated: #ffffff;
+    --az-surface-sunken: #eff1f4;
+    --az-border: #e3e6eb;
+    --az-border-strong: #cfd4dc;
+    --az-text-primary: #1a1f27;
+    --az-text-secondary: #5a6473;
+    --az-text-tertiary: #7c8696;
+    --az-accent: #2a5580;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --az-background: #0e1116;
+      --az-surface: #1a1f27;
+      --az-surface-elevated: #2b333e;
+      --az-surface-sunken: #070a0e;
+      --az-border: #252c36;
+      --az-border-strong: #414b59;
+      --az-text-primary: #f7f8fa;
+      --az-text-secondary: #a8b0bd;
+      --az-text-tertiary: #7c8696;
+      --az-accent: #7fa3c2;
+    }
+  }
+}

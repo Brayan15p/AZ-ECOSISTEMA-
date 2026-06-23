@@ -1,0 +1,24 @@
+{
+  "name": "az-ecosistema",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AZ Ecosistema — plataforma de economía circular (Arauca): app móvil + web + pagos",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "mobile": "pnpm --filter @az/mobile start",
+    "web": "pnpm --filter @az/web dev",
+    "db:types": "supabase gen types typescript --local > packages/supabase/src/database.types.ts"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  }
+}

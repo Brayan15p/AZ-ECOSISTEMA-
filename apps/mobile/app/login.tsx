@@ -1,0 +1,229 @@
+import { Ionicons } from "@expo/vector-icons";
+import { gray, green, navy } from "@az/ui-tokens";
+import type { Role } from "@az/core";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { useAuth } from "../lib/auth";
+
+export default function Login() {
+  const { demo, signInWithPassword, signInAsRole } = useAuth();
+  const router = useRouter();
+
+  return (
+    <SafeAreaView className="flex-1 bg-background" edges={["top", "bottom"]}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <ScrollView
+          contentContainerClassName="flex-grow justify-center gap-8 px-6 py-10"
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View className="gap-2">
+            <View className="mb-2 h-12 w-12 items-center justify-center rounded-2xl bg-brand">
+              <Text className="text-title3 text-white">AZ</Text>
+            </View>
+            <Text className="text-largeTitle text-text-primary">
+              AZ Ecosistema
+            </Text>
+            <Text className="text-body text-text-secondary">
+              Economía circular para Arauca.{" "}
+              {demo ? "Elige cómo quieres ingresar." : "Inicia sesión para continuar."}
+            </Text>
+          </View>
+
+          {demo ? (
+            <DemoRolePicker
+              onPick={(role) => {
+                signInAsRole(role);
+                router.replace("/");
+              }}
+            />
+          ) : (
+            <PasswordForm
+              onSubmit={signInWithPassword}
+              onSuccess={() => router.replace("/")}
+              onDemo={() => {
+                signInAsRole("ciudadano");
+                router.replace("/");
+              }}
+            />
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+function DemoRolePicker({ onPick }: { onPick: (role: Role) => void }) {
+  return (
+    <View className="gap-4">
+      <RoleCard
+        color={navy[700]}
+        icon="home"
+        title="Soy ciudadano"
+        subtitle="Mi Barrio · revisa tu clasificación y canjea puntos"
+        onPress={() => onPick("ciudadano")}
+      />
+      <RoleCard
+        color={green[600]}
+        icon="cube"
+        title="Soy reciclador"
+        subtitle="Tus rutas, recolección y liquidaciones"
+        onPress={() => onPick("reciclador")}
+      />
+      <Text className="px-1 text-footnote text-text-tertiary">
+        Modo demostración (sin .env). Configura EXPO_PUBLIC_SUPABASE_URL y
+        ANON_KEY para entrar con cuentas reales.
+      </Text>
+    </View>
+  );
+}
+
+function PasswordForm({
+  onSubmit,
+  onSuccess,
+  onDemo,
+}: {
+  onSubmit: (email: string, password: string) => Promise<{ error: string | null }>;
+  onSuccess: () => void;
+  onDemo: () => void;
+}) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async () => {
+    setError(null);
+    setLoading(true);
+    const { error: err } = await onSubmit(email, password);
+    setLoading(false);
+    if (err) setError(err);
+    else onSuccess();
+  };
+
+  const disabled = loading || email.trim().length === 0 || password.length === 0;
+
+  return (
+    <View className="gap-4">
+      <View className="gap-2">
+        <Text className="px-1 text-footnote uppercase text-text-tertiary">
+          Correo
+        </Text>
+        <TextInput
+          value={email}
+          onChangeText={setEmail}
+          placeholder="tu@correo.com"
+          placeholderTextColor={gray[400]}
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          inputMode="email"
+          className="rounded-xl border border-border bg-surface px-4 py-3 text-callout text-text-primary"
+        />
+      </View>
+
+      <View className="gap-2">
+        <Text className="px-1 text-footnote uppercase text-text-tertiary">
+          Contraseña
+        </Text>
+        <TextInput
+          value={password}
+          onChangeText={setPassword}
+          placeholder="••••••••"
+          placeholderTextColor={gray[400]}
+          secureTextEntry
+          autoCapitalize="none"
+          className="rounded-xl border border-border bg-surface px-4 py-3 text-callout text-text-primary"
+        />
+      </View>
+
+      {error ? (
+        <View className="flex-row items-center gap-2 rounded-xl bg-surface-sunken px-4 py-3">
+          <Ionicons name="alert-circle" size={18} color={gray[600]} />
+          <Text className="flex-1 text-footnote text-text-secondary">{error}</Text>
+        </View>
+      ) : null}
+
+      <Pressable
+        disabled={disabled}
+        onPress={submit}
+        className={
+          disabled
+            ? "items-center rounded-xl bg-surface-sunken py-3.5"
+            : "items-center rounded-xl bg-brand py-3.5 active:opacity-80"
+        }
+      >
+        {loading ? (
+          <ActivityIndicator color={gray[0]} />
+        ) : (
+          <Text
+            className={
+              disabled
+                ? "text-callout text-text-tertiary"
+                : "text-callout text-white"
+            }
+          >
+            Iniciar sesión
+          </Text>
+        )}
+      </Pressable>
+
+      <Pressable
+        onPress={onDemo}
+        className="items-center py-1 active:opacity-60"
+      >
+        <Text className="text-footnote text-text-tertiary">
+          Explorar en modo demostración
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function RoleCard({
+  color,
+  icon,
+  title,
+  subtitle,
+  onPress,
+}: {
+  color: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  subtitle: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className="flex-row items-center gap-4 rounded-2xl border border-border bg-surface p-5 active:opacity-80"
+    >
+      <View
+        className="h-12 w-12 items-center justify-center rounded-xl"
+        style={{ backgroundColor: `${color}1A` }}
+      >
+        <Ionicons name={icon} size={24} color={color} />
+      </View>
+      <View className="flex-1">
+        <Text className="text-headline text-text-primary">{title}</Text>
+        <Text className="text-subhead text-text-secondary">{subtitle}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={20} color={color} />
+    </Pressable>
+  );
+}

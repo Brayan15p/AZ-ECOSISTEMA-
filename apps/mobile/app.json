@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "AZ Ecosistema",
+    "slug": "az-ecosistema",
+    "scheme": "azecosistema",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "co.azecosistema.app"
+    },
+    "android": {
+      "package": "co.azecosistema.app",
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": ["expo-router"]
+  }
+}
