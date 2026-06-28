@@ -1,11 +1,10 @@
-import { Ionicons } from "@expo/vector-icons";
-import { gray } from "@az/ui-tokens";
 import { useRouter } from "expo-router";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
+import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
-import { Loading } from "../../components/ui/Loading";
 import { Screen } from "../../components/ui/Screen";
+import { ScreenSkeleton } from "../../components/ui/Skeleton";
 import { useAuth } from "../../lib/auth";
 import { useHousehold } from "../../lib/data";
 
@@ -14,7 +13,7 @@ export default function Perfil() {
   const { profile, demo, isRemote, signOut } = useAuth();
   const { data: household, loading } = useHousehold();
 
-  if (loading) return <Loading />;
+  if (loading) return <ScreenSkeleton />;
 
   const name = profile?.fullName ?? household?.owner ?? "Ciudadano";
   const connection = isRemote
@@ -49,13 +48,12 @@ export default function Perfil() {
         <Row label="Conexión a Supabase" value={connection} />
       </Card>
 
-      <Pressable
+      <Button
+        variant="secondary"
+        icon="log-out-outline"
+        title="Cerrar sesión"
         onPress={() => void signOut().then(() => router.replace("/login"))}
-        className="flex-row items-center justify-center gap-2 rounded-xl border border-border bg-surface py-3 active:opacity-80"
-      >
-        <Ionicons name="log-out-outline" size={18} color={gray[600]} />
-        <Text className="text-callout text-text-secondary">Cerrar sesión</Text>
-      </Pressable>
+      />
     </Screen>
   );
 }

@@ -9,9 +9,11 @@ import { Link, useRouter } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 
 import { Badge } from "../../components/ui/Badge";
+import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
-import { Loading } from "../../components/ui/Loading";
+import { EmptyState } from "../../components/ui/EmptyState";
 import { Screen } from "../../components/ui/Screen";
+import { ScreenSkeleton } from "../../components/ui/Skeleton";
 import { StatTile } from "../../components/ui/StatTile";
 import { useAuth } from "../../lib/auth";
 import { useRecycler, useRoute } from "../../lib/data";
@@ -19,16 +21,18 @@ import { useRecycler, useRoute } from "../../lib/data";
 export default function RecicladorHome() {
   const router = useRouter();
   const { signOut } = useAuth();
-  const { data: r, loading } = useRecycler();
+  const { data: r, loading, error, reload } = useRecycler();
   const { data: route } = useRoute(r?.zone ?? null);
 
-  if (loading) return <Loading />;
+  if (loading) return <ScreenSkeleton />;
   if (!r) {
     return (
-      <Screen>
-        <Text className="text-body text-text-secondary">
-          No encontramos tu perfil de reciclador.
-        </Text>
+      <Screen error={error} onRetry={reload} onRefresh={reload}>
+        <EmptyState
+          icon="cube-outline"
+          title="No encontramos tu perfil"
+          subtitle="Tu perfil de reciclador aún no está vinculado. Contacta a tu operador."
+        />
       </Screen>
     );
   }
@@ -38,7 +42,7 @@ export default function RecicladorHome() {
   const monthlyPayout = estimateMonthlyPayout(r.kgDay);
 
   return (
-    <Screen>
+    <Screen onRefresh={reload} refreshing={loading} error={error} onRetry={reload}>
       <View className="flex-row items-center justify-between pt-2">
         <View className="flex-1">
           <Text className="text-footnote uppercase text-text-tertiary">
@@ -68,7 +72,11 @@ export default function RecicladorHome() {
 
       {/* Resumen de la ruta de hoy */}
       <Link href="/reciclador/rutas" asChild>
-        <Pressable className="active:opacity-80">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Ver ruta de hoy"
+          className="active:scale-[0.99] active:opacity-90"
+        >
           <Card className="gap-3">
             <View className="flex-row items-center justify-between">
               <Text className="text-caption1 uppercase text-text-tertiary">
@@ -102,7 +110,11 @@ export default function RecicladorHome() {
 
       {/* Estimado del mes -> Liquidaciones */}
       <Link href="/reciclador/liquidaciones" asChild>
-        <Pressable className="active:opacity-80">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Ver liquidaciones"
+          className="active:scale-[0.99] active:opacity-90"
+        >
           <Card className="flex-row items-center justify-between">
             <View>
               <Text className="text-caption1 uppercase text-text-tertiary">
@@ -117,13 +129,14 @@ export default function RecicladorHome() {
         </Pressable>
       </Link>
 
-      <Pressable
-        onPress={() => void signOut().then(() => router.replace("/login"))}
-        className="mt-2 flex-row items-center justify-center gap-2 rounded-xl border border-border bg-surface py-3 active:opacity-80"
-      >
-        <Ionicons name="log-out-outline" size={18} color={green[600]} />
-        <Text className="text-callout text-text-secondary">Cerrar sesión</Text>
-      </Pressable>
+      <View className="mt-2">
+        <Button
+          variant="secondary"
+          icon="log-out-outline"
+          title="Cerrar sesión"
+          onPress={() => void signOut().then(() => router.replace("/login"))}
+        />
+      </View>
     </Screen>
   );
 }

@@ -1,24 +1,39 @@
 {
   "expo": {
     "name": "AZ Ecosistema",
-    "slug": "az-ecosistema",
+    "slug": "corporacion-az-app",
+    "owner": "azcorporacions-team",
     "scheme": "azecosistema",
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/60d5966f-b21f-4007-babe-9a0735896a5e"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "co.azecosistema.app"
     },
     "android": {
       "package": "co.azecosistema.app",
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "versionCode": 2
     },
     "web": {
       "bundler": "metro",
       "output": "static"
     },
-    "plugins": ["expo-router"]
+    "plugins": [
+      "expo-router"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "60d5966f-b21f-4007-babe-9a0735896a5e"
+      }
+    }
   }
 }

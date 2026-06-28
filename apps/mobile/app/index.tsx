@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import { gray, navy } from "@az/ui-tokens";
+import { navy } from "@az/ui-tokens";
 import { Redirect } from "expo-router";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
+import { Button } from "../components/ui/Button";
 import { Loading } from "../components/ui/Loading";
 import { useAuth } from "../lib/auth";
 
@@ -32,13 +33,15 @@ export default function Index() {
         La app móvil es para ciudadanos y recicladores. Ingresa a la consola web
         con esta misma cuenta.
       </Text>
-      <Pressable
-        onPress={() => void signOut()}
-        className="mt-2 flex-row items-center gap-2 rounded-xl border border-border bg-surface px-5 py-3 active:opacity-80"
-      >
-        <Ionicons name="log-out-outline" size={18} color={gray[600]} />
-        <Text className="text-callout text-text-secondary">Cerrar sesión</Text>
-      </Pressable>
+      <View className="mt-2">
+        <Button
+          variant="secondary"
+          icon="log-out-outline"
+          title="Cerrar sesión"
+          fullWidth={false}
+          onPress={() => void signOut()}
+        />
+      </View>
     </View>
   );
 }

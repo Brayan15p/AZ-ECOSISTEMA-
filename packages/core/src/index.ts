@@ -5,3 +5,5 @@ export * from "./points";
 export * from "./payouts";
 export * from "./format";
 export * from "./schemas";
+export * from "./gamification";
+export * from "./waste-guide";

@@ -1,9 +1,11 @@
 import { canRedeem, formatPoints, pointsBalance, type CatalogItem } from "@az/core";
-import { Pressable, Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 
+import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
-import { Loading } from "../../components/ui/Loading";
+import { EmptyState } from "../../components/ui/EmptyState";
 import { Screen } from "../../components/ui/Screen";
+import { ScreenSkeleton } from "../../components/ui/Skeleton";
 import { useCatalog, usePointsLedger } from "../../lib/data";
 
 const REASONS: Record<string, string> = {
@@ -13,14 +15,14 @@ const REASONS: Record<string, string> = {
 };
 
 export default function Recompensas() {
-  const { data: catalog, loading } = useCatalog();
+  const { data: catalog, loading, error, reload } = useCatalog();
   const { data: ledger } = usePointsLedger();
   const balance = pointsBalance(ledger);
 
-  if (loading) return <Loading />;
+  if (loading) return <ScreenSkeleton />;
 
   return (
-    <Screen>
+    <Screen onRefresh={reload} refreshing={loading} error={error} onRetry={reload}>
       <View className="gap-1 pt-2">
         <Text className="text-title1 text-text-primary">Recompensas</Text>
         <Text className="text-body text-text-secondary">
@@ -29,15 +31,44 @@ export default function Recompensas() {
         </Text>
       </View>
 
-      {catalog.map((item) => (
-        <RewardRow key={item.id} item={item} balance={balance} />
-      ))}
+      {catalog.length === 0 ? (
+        <EmptyState
+          icon="gift-outline"
+          title="Aún no hay recompensas"
+          subtitle="Pronto tu municipio publicará bonos y beneficios para canjear con tus puntos."
+        />
+      ) : (
+        catalog.map((item) => (
+          <RewardRow key={item.id} item={item} balance={balance} />
+        ))
+      )}
     </Screen>
   );
 }
 
 function RewardRow({ item, balance }: { item: CatalogItem; balance: number }) {
   const check = canRedeem(item, balance);
+
+  const confirmRedeem = () => {
+    Alert.alert(
+      `Canjear ${item.name}`,
+      `Vas a usar ${formatPoints(item.costPoints)} de tu saldo. ¿Confirmas el canje?`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Sí, canjear",
+          onPress: () => {
+            // TODO: llamar al RPC transaccional `redeem(item.id)` (descuento
+            // atómico de puntos + stock). Por ahora confirmamos en modo demo.
+            Alert.alert(
+              "¡Canje registrado!",
+              `Te llegará una notificación con el código de "${item.name}".`,
+            );
+          },
+        },
+      ],
+    );
+  };
 
   return (
     <Card className="gap-3">
@@ -53,24 +84,16 @@ function RewardRow({ item, balance }: { item: CatalogItem; balance: number }) {
         </Text>
       </View>
 
-      <Pressable
+      <Button
+        variant="primary"
+        icon={check.ok ? "gift" : "lock-closed"}
+        title={check.ok ? "Canjear" : REASONS[check.reason]}
         disabled={!check.ok}
-        className={
-          check.ok
-            ? "items-center rounded-xl bg-brand py-3 active:opacity-80"
-            : "items-center rounded-xl bg-surface-sunken py-3"
+        onPress={confirmRedeem}
+        accessibilityHint={
+          check.ok ? `Canjea ${item.name} por ${item.costPoints} puntos` : undefined
         }
-      >
-        <Text
-          className={
-            check.ok
-              ? "text-callout text-white"
-              : "text-callout text-text-tertiary"
-          }
-        >
-          {check.ok ? "Canjear" : REASONS[check.reason]}
-        </Text>
-      </Pressable>
+      />
     </Card>
   );
 }

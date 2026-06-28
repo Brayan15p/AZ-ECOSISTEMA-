@@ -12,35 +12,56 @@ import {
 } from "@az/core";
 import { green } from "@az/ui-tokens";
 import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 
 import { Badge } from "../../components/ui/Badge";
+import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
-import { Loading } from "../../components/ui/Loading";
+import { EmptyState } from "../../components/ui/EmptyState";
 import { Screen } from "../../components/ui/Screen";
+import { ScreenSkeleton } from "../../components/ui/Skeleton";
 import { usePayouts, useRecycler } from "../../lib/data";
 
 export default function Liquidaciones() {
   const { data: r, loading } = useRecycler();
-  const { data: payouts } = usePayouts();
+  const { data: payouts, error, reload } = usePayouts();
   const [requested, setRequested] = useState(false);
 
-  if (loading) return <Loading />;
+  if (loading) return <ScreenSkeleton />;
   if (!r) {
     return (
-      <Screen>
-        <Text className="text-body text-text-secondary">
-          No encontramos tu perfil de reciclador.
-        </Text>
+      <Screen error={error} onRetry={reload} onRefresh={reload}>
+        <EmptyState
+          icon="cube-outline"
+          title="No encontramos tu perfil"
+          subtitle="Tu perfil de reciclador aún no está vinculado. Contacta a tu operador."
+        />
       </Screen>
     );
   }
+
+  const requestPayout = () => {
+    Alert.alert(
+      "Solicitar liquidación",
+      `Vas a solicitar el pago de ${formatCop(estimateMonthlyPayout(r.kgDay))} estimado este mes. ¿Confirmas?`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Solicitar",
+          onPress: () => {
+            // TODO: crear la solicitud de payout (idempotente por periodo) en backend.
+            setRequested(true);
+          },
+        },
+      ],
+    );
+  };
 
   const monthlyPayout = estimateMonthlyPayout(r.kgDay);
   const paid = totalPaid(payouts);
 
   return (
-    <Screen>
+    <Screen onRefresh={reload} error={error} onRetry={reload}>
       <View className="gap-1 pt-2">
         <Text className="text-title1 text-text-primary">Liquidaciones</Text>
         <Text className="text-body text-text-secondary">
@@ -78,36 +99,23 @@ export default function Liquidaciones() {
           </View>
         </View>
 
-        <Pressable
+        <Button
+          variant={requested ? "secondary" : "success"}
+          icon={requested ? "checkmark-circle" : "cash-outline"}
+          title={requested ? "Solicitud enviada" : "Solicitar liquidación"}
           disabled={requested}
-          onPress={() => setRequested(true)}
-          className={
-            requested
-              ? "flex-row items-center justify-center gap-2 rounded-xl bg-surface-sunken py-3"
-              : "items-center rounded-xl bg-brand-alt py-3 active:opacity-80"
-          }
-        >
-          {requested ? (
-            <>
-              <Ionicons name="checkmark-circle" size={18} color={green[600]} />
-              <Text className="text-callout text-text-secondary">
-                Solicitud enviada
-              </Text>
-            </>
-          ) : (
-            <Text className="text-callout text-white">Solicitar liquidación</Text>
-          )}
-        </Pressable>
+          onPress={requestPayout}
+        />
       </Card>
 
       {/* Historial */}
       <Text className="mt-2 text-title3 text-text-primary">Historial</Text>
       {payouts.length === 0 ? (
-        <Card>
-          <Text className="text-subhead text-text-secondary">
-            Aún no tienes liquidaciones registradas.
-          </Text>
-        </Card>
+        <EmptyState
+          icon="receipt-outline"
+          title="Sin liquidaciones todavía"
+          subtitle="Aquí verás el historial de tus pagos por material recolectado."
+        />
       ) : (
         payouts.map((p) => (
           <Card key={p.id} className="gap-2">

@@ -55,6 +55,148 @@ export const gray = {
   950: "#0E1116",
 } as const;
 
+// ════════════════════════════════════════════════════════════
+//  PALETA VIBRANTE "ECO" (v2)
+//  Acentos vivos para una UI alegre y amigable, manteniendo la
+//  marca navy/green como base seria. Estos ramps son escalas
+//  completas 50→950 para gradientes, tints e iconografía a color.
+// ════════════════════════════════════════════════════════════
+
+// Verde vivo — acción principal de la app móvil (más brillante que `green`).
+export const eco = {
+  50: "#ECFDF3",
+  100: "#D1FADF",
+  200: "#A6F4C5",
+  300: "#6CE9A6",
+  400: "#32D583",
+  500: "#12B76A", // CTA / marca viva
+  600: "#039855",
+  700: "#027A48",
+  800: "#05603A",
+  900: "#054F31",
+  950: "#053321",
+} as const;
+
+// Lima fresca — energía, “ganaste puntos”, confeti.
+export const lime = {
+  50: "#F3FEE7",
+  100: "#E4FBCC",
+  200: "#D0F8AB",
+  300: "#A6EF67",
+  400: "#85E13A",
+  500: "#66C61C",
+  600: "#4CA30D",
+  700: "#3B7C0F",
+  800: "#326212",
+  900: "#2B5314",
+  950: "#15290A",
+} as const;
+
+// Teal — agua / impacto ambiental.
+export const teal = {
+  50: "#F0FDF9",
+  100: "#CCFBEF",
+  200: "#99F6E0",
+  300: "#5FE9D0",
+  400: "#2ED3B7",
+  500: "#15B79E",
+  600: "#0E9384",
+  700: "#107569",
+  800: "#125D56",
+  900: "#134E48",
+  950: "#0A2926",
+} as const;
+
+// Ámbar — recompensas, energía, oro/logros.
+export const amber = {
+  50: "#FFFAEB",
+  100: "#FEF0C7",
+  200: "#FEDF89",
+  300: "#FEC84B",
+  400: "#FDB022",
+  500: "#F79009",
+  600: "#DC6803",
+  700: "#B54708",
+  800: "#93370D",
+  900: "#7A2E0E",
+  950: "#4E1D09",
+} as const;
+
+// Coral — penalizaciones / residuos peligrosos / racha (fuego).
+export const coral = {
+  50: "#FFF1F3",
+  100: "#FFE4E8",
+  200: "#FECDD6",
+  300: "#FEA3B4",
+  400: "#FD6F8E",
+  500: "#F63D68",
+  600: "#E31B54",
+  700: "#C01048",
+  800: "#A11043",
+  900: "#89123E",
+  950: "#510B24",
+} as const;
+
+// Azul cielo — reciclables / información.
+export const sky = {
+  50: "#F0F9FF",
+  100: "#E0F2FE",
+  200: "#B9E6FE",
+  300: "#7CD4FD",
+  400: "#36BFFA",
+  500: "#0BA5EC",
+  600: "#0086C9",
+  700: "#026AA2",
+  800: "#065986",
+  900: "#0B4A6F",
+  950: "#062C41",
+} as const;
+
+// Violeta — especiales / posconsumo / insignias premium.
+export const violet = {
+  50: "#F5F3FF",
+  100: "#ECE9FE",
+  200: "#DDD6FE",
+  300: "#C3B5FD",
+  400: "#A48AFB",
+  500: "#875BF7",
+  600: "#7839EE",
+  700: "#6927DA",
+  800: "#5720B7",
+  900: "#491C96",
+  950: "#2E125E",
+} as const;
+
+/**
+ * Colores por flujo de residuo, alineados con la norma colombiana de
+ * separación en la fuente (Res. 2184/2019: bolsa blanca/verde/negra) +
+ * peligrosos y posconsumo. Cada uno trae color sólido, tint suave y
+ * el nombre de un icono Ionicons sugerido.
+ */
+export const wasteCategory = {
+  aprovechable: { color: sky[600], soft: sky[50], icon: "sync-circle", bag: "Bolsa blanca" },
+  organico: { color: eco[600], soft: eco[50], icon: "leaf", bag: "Bolsa verde" },
+  noAprovechable: { color: gray[700], soft: gray[100], icon: "trash-bin", bag: "Bolsa negra" },
+  peligroso: { color: coral[600], soft: coral[50], icon: "warning", bag: "Punto especial" },
+  especial: { color: violet[600], soft: violet[50], icon: "battery-charging", bag: "Punto posconsumo" },
+} as const;
+
+/**
+ * Pares de color para gradientes (la app móvil los pinta con un
+ * componente de capas, sin librería nativa). [desde, hasta].
+ */
+export const gradients = {
+  eco: [eco[400], eco[600]],
+  ecoLime: [lime[400], eco[500]],
+  meadow: [eco[500], teal[600]],
+  ocean: [sky[400], teal[600]],
+  sunrise: [amber[400], coral[500]],
+  gold: [amber[300], amber[600]],
+  royal: [violet[500], sky[500]],
+  flame: [amber[500], coral[600]],
+  night: [navy[700], navy[950]],
+} as const;
+
 // ── Estados semánticos ──────────────────────────────────────
 export const status = {
   success: "#2E7D32",
@@ -215,6 +357,15 @@ export const tokens = {
   navy,
   green,
   gray,
+  eco,
+  lime,
+  teal,
+  amber,
+  coral,
+  sky,
+  violet,
+  wasteCategory,
+  gradients,
   status,
   semantic,
   fontFamily,

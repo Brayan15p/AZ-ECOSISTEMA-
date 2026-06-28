@@ -2,10 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { formatNumber, scoreColor, type RouteStop, type RouteStopStatus } from "@az/core";
 import { gray, green, status } from "@az/ui-tokens";
 import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 import { Badge } from "../../components/ui/Badge";
+import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { EmptyState } from "../../components/ui/EmptyState";
 import { Screen } from "../../components/ui/Screen";
 import { useRecycler, useRoute } from "../../lib/data";
 
@@ -20,7 +22,7 @@ const DEMO_KG = 10;
 
 export default function Rutas() {
   const { data: recycler } = useRecycler();
-  const { data: route } = useRoute(recycler?.zone ?? null);
+  const { data: route, loading, error, reload } = useRoute(recycler?.zone ?? null);
 
   // Marcado local de paradas (demo; en remoto iría a una bitácora de recolección).
   const [overrides, setOverrides] = useState<
@@ -40,7 +42,7 @@ export default function Rutas() {
     setOverrides((o) => ({ ...o, [id]: { status: "collected", kg: DEMO_KG } }));
 
   return (
-    <Screen>
+    <Screen onRefresh={reload} refreshing={loading} error={error} onRetry={reload}>
       <View className="gap-1 pt-2">
         <Text className="text-footnote uppercase text-text-tertiary">
           {recycler?.zone ?? "Tu ruta"}
@@ -71,9 +73,16 @@ export default function Rutas() {
       </Card>
 
       {/* Paradas */}
-      {stops.map((s) => {
-        const meta = STATUS_META[s.status];
-        return (
+      {stops.length === 0 ? (
+        <EmptyState
+          icon="navigate-outline"
+          title="Sin paradas hoy"
+          subtitle="Cuando tu municipio asigne hogares a tu zona, aparecerán aquí."
+        />
+      ) : (
+        stops.map((s) => {
+          const meta = STATUS_META[s.status];
+          return (
           <Card key={s.id} className="gap-3">
             <View className="flex-row items-start justify-between gap-3">
               <View className="flex-1">
@@ -97,13 +106,15 @@ export default function Rutas() {
               </View>
 
               {s.status === "pending" ? (
-                <Pressable
+                <Button
+                  variant="success"
+                  size="md"
+                  icon="checkmark"
+                  title="Recolectado"
+                  fullWidth={false}
                   onPress={() => markCollected(s.id)}
-                  className="flex-row items-center gap-1.5 rounded-lg bg-brand-alt px-3 py-2 active:opacity-80"
-                >
-                  <Ionicons name="checkmark" size={15} color="#fff" />
-                  <Text className="text-footnote text-white">Recolectado</Text>
-                </Pressable>
+                  accessibilityHint={`Marca a ${s.owner} como recolectado`}
+                />
               ) : s.status === "collected" ? (
                 <View className="flex-row items-center gap-1.5">
                   <Ionicons name="checkmark-circle" size={16} color={green[600]} />
@@ -114,8 +125,9 @@ export default function Rutas() {
               ) : null}
             </View>
           </Card>
-        );
-      })}
+          );
+        })
+      )}
     </Screen>
   );
 }

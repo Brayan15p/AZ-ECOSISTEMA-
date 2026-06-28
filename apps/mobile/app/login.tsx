@@ -1,10 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import { gray, green, navy } from "@az/ui-tokens";
+import { gray, green, navy, status } from "@az/ui-tokens";
 import type { Role } from "@az/core";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,6 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { Button } from "../components/ui/Button";
 import { useAuth } from "../lib/auth";
 
 export default function Login() {
@@ -153,39 +153,31 @@ function PasswordForm({
       </View>
 
       {error ? (
-        <View className="flex-row items-center gap-2 rounded-xl bg-surface-sunken px-4 py-3">
-          <Ionicons name="alert-circle" size={18} color={gray[600]} />
-          <Text className="flex-1 text-footnote text-text-secondary">{error}</Text>
+        <View
+          className="flex-row items-center gap-2 rounded-xl bg-[#F7E1E1] px-4 py-3"
+          accessibilityRole="alert"
+        >
+          <Ionicons name="alert-circle" size={18} color={status.danger} />
+          <Text className="flex-1 text-footnote" style={{ color: status.danger }}>
+            {error}
+          </Text>
         </View>
       ) : null}
 
-      <Pressable
+      <Button
+        title="Iniciar sesión"
+        size="lg"
+        onPress={() => void submit()}
+        loading={loading}
         disabled={disabled}
-        onPress={submit}
-        className={
-          disabled
-            ? "items-center rounded-xl bg-surface-sunken py-3.5"
-            : "items-center rounded-xl bg-brand py-3.5 active:opacity-80"
-        }
-      >
-        {loading ? (
-          <ActivityIndicator color={gray[0]} />
-        ) : (
-          <Text
-            className={
-              disabled
-                ? "text-callout text-text-tertiary"
-                : "text-callout text-white"
-            }
-          >
-            Iniciar sesión
-          </Text>
-        )}
-      </Pressable>
+      />
 
       <Pressable
         onPress={onDemo}
-        className="items-center py-1 active:opacity-60"
+        accessibilityRole="button"
+        accessibilityLabel="Explorar en modo demostración"
+        hitSlop={12}
+        className="items-center py-2 active:opacity-60"
       >
         <Text className="text-footnote text-text-tertiary">
           Explorar en modo demostración
@@ -211,7 +203,10 @@ function RoleCard({
   return (
     <Pressable
       onPress={onPress}
-      className="flex-row items-center gap-4 rounded-2xl border border-border bg-surface p-5 active:opacity-80"
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityHint={subtitle}
+      className="flex-row items-center gap-4 rounded-2xl border border-border bg-surface p-5 active:scale-[0.99] active:opacity-80"
     >
       <View
         className="h-12 w-12 items-center justify-center rounded-xl"
