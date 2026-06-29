@@ -38,6 +38,12 @@ const fontSize = Object.fromEntries(
 const px = (obj: Record<string | number, number>) =>
   Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, `${v}px`]));
 
+// Las pilas de fuentes vienen `readonly` (`as const`) desde tokens; Tailwind /
+// NativeWind esperan `string[]` mutable, así que clonamos cada pila.
+const fontFamilyMut = Object.fromEntries(
+  Object.entries(fontFamily).map(([name, stack]) => [name, [...stack]]),
+) as Record<string, string[]>;
+
 export const tailwindTheme = {
   colors: {
     navy,
@@ -71,7 +77,7 @@ export const tailwindTheme = {
   },
   spacing: px(spacing),
   borderRadius: px(radius),
-  fontFamily,
+  fontFamily: fontFamilyMut,
   fontSize: fontSize as Record<string, [string, Record<string, string>]>,
   boxShadow: shadow,
 } as const;
