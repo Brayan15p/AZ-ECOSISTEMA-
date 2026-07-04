@@ -9,6 +9,7 @@ export function StatCard({
   hint,
   icon: Icon,
   accent = "var(--az-accent)",
+  gradient,
   delta,
 }: {
   label: string;
@@ -16,6 +17,8 @@ export function StatCard({
   hint?: string;
   icon: LucideIcon;
   accent?: string;
+  /** [desde, hasta] — ej. de `gradients.meadow` en @az/ui-tokens. Si se pasa, reemplaza `accent`. */
+  gradient?: readonly [string, string];
   delta?: { value: string; positive: boolean };
 }) {
   return (
@@ -26,9 +29,13 @@ export function StatCard({
         </span>
         <span
           className="flex h-9 w-9 items-center justify-center rounded-xl"
-          style={{ backgroundColor: `${typeof accent === "string" && accent.startsWith("#") ? accent : "#2A5580"}1A` }}
+          style={
+            gradient
+              ? { background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})` }
+              : { backgroundColor: `${typeof accent === "string" && accent.startsWith("#") ? accent : "#2A5580"}1A` }
+          }
         >
-          <Icon size={18} style={{ color: accent }} />
+          <Icon size={18} style={{ color: gradient ? "#FFFFFF" : accent }} />
         </span>
       </div>
       <div className="flex items-end gap-2">

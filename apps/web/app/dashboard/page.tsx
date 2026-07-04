@@ -3,38 +3,19 @@ import {
   formatNumber,
   payoutStatusColor,
   payoutStatusLabel,
-  type PayoutStatus,
 } from "@az/core";
+import { gradients } from "@az/ui-tokens";
 import { Coins, Recycle, TrendingUp, Users } from "lucide-react";
+import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
-
-type Row = {
-  recycler: string;
-  zone: string;
-  period: string;
-  kg: number;
-  amountCop: number;
-  status: PayoutStatus;
-};
-
-const PAYOUTS: Row[] = [
-  { recycler: "Carlos Mendoza", zone: "Zona 3 · Córdoba", period: "May 2026", kg: 8320, amountCop: 2912000, status: "paid" },
-  { recycler: "Ana Robledo", zone: "Zona 1 · Centro", period: "May 2026", kg: 6740, amountCop: 2359000, status: "paid" },
-  { recycler: "Luis Patiño", zone: "Zona 5 · Unión", period: "May 2026", kg: 5980, amountCop: 2093000, status: "pending" },
-  { recycler: "Marta Vega", zone: "Zona 2 · Mártires", period: "May 2026", kg: 7120, amountCop: 2492000, status: "pending" },
-];
-
-const ZONES = [
-  { name: "Zona 3 · Córdoba", rate: 74 },
-  { name: "Zona 1 · Centro", rate: 61 },
-  { name: "Zona 2 · Mártires", rate: 58 },
-  { name: "Zona 5 · Unión", rate: 49 },
-];
+import { PAYOUTS, zoneAggregates } from "@/lib/mock-data";
 
 export default function DashboardPage() {
+  const zones = zoneAggregates().slice(0, 4);
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-7">
@@ -42,41 +23,41 @@ export default function DashboardPage() {
           Resumen
         </h1>
         <p className="mt-1 text-callout text-text-secondary">
-          Municipio de Arauca · periodo en curso
+          Asociación de recicladores · Cali · periodo en curso
         </p>
       </div>
 
       {/* KPIs */}
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          label="Hogares activos"
-          value="1.412"
+          label="Recicladores activos"
+          value="47"
           icon={Users}
-          accent="#1B3A5C"
-          delta={{ value: "8.2%", positive: true }}
-          hint="Clasificando este mes"
+          gradient={gradients.meadow}
+          delta={{ value: "3", positive: true }}
+          hint="Miembros de la asociación"
         />
         <StatCard
           label="Material recuperado"
           value="8.3 t"
           icon={Recycle}
-          accent="#3A5C2E"
+          gradient={gradients.ocean}
           delta={{ value: "5.1%", positive: true }}
-          hint="Desviado del relleno"
+          hint="Este mes"
         />
         <StatCard
-          label="Tasa de desviación"
-          value="62%"
+          label="Formalizados"
+          value="68%"
           icon={TrendingUp}
-          accent="#00695C"
-          delta={{ value: "3 pts", positive: true }}
-          hint="Sobre total recogido"
+          gradient={gradients.royal}
+          delta={{ value: "6 pts", positive: true }}
+          hint="Del total de miembros"
         />
         <StatCard
           label="Liquidado este mes"
           value={formatCop(9856000)}
           icon={Coins}
-          accent="#B8860B"
+          gradient={gradients.sunrise}
           delta={{ value: "2.4%", positive: false }}
           hint="A recicladores"
         />
@@ -89,9 +70,12 @@ export default function DashboardPage() {
             <h2 className="text-title3 font-semibold text-text-primary">
               Liquidaciones recientes
             </h2>
-            <a href="/dashboard" className="text-footnote font-medium text-accent hover:underline">
+            <Link
+              href="/dashboard/reportes"
+              className="text-footnote font-medium text-accent hover:underline"
+            >
               Ver todas
-            </a>
+            </Link>
           </div>
           <div className="overflow-hidden">
             <table className="w-full text-left">
@@ -106,7 +90,7 @@ export default function DashboardPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {PAYOUTS.map((p) => (
-                  <tr key={p.recycler} className="text-callout">
+                  <tr key={p.id} className="text-callout">
                     <td className="py-3.5">
                       <div className="font-medium text-text-primary">
                         {p.recycler}
@@ -137,16 +121,24 @@ export default function DashboardPage() {
 
         {/* Aprovechamiento por zona */}
         <Card>
-          <h2 className="mb-5 text-title3 font-semibold text-text-primary">
-            Aprovechamiento por zona
-          </h2>
+          <div className="mb-5 flex items-center justify-between">
+            <h2 className="text-title3 font-semibold text-text-primary">
+              Aprovechamiento por zona
+            </h2>
+            <Link
+              href="/dashboard/rutas"
+              className="text-footnote font-medium text-accent hover:underline"
+            >
+              Ver rutas
+            </Link>
+          </div>
           <div className="flex flex-col gap-5">
-            {ZONES.map((z) => (
-              <div key={z.name}>
+            {zones.map((z) => (
+              <div key={z.zone}>
                 <div className="mb-1.5 flex items-center justify-between text-footnote">
-                  <span className="text-text-secondary">{z.name}</span>
+                  <span className="text-text-secondary">{z.zone}</span>
                   <span className="font-semibold text-text-primary">
-                    {z.rate}%
+                    {formatNumber(z.kg)} kg
                   </span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-surface-sunken">

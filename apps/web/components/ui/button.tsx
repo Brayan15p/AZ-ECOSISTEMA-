@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
 
@@ -18,12 +18,13 @@ export function Button({
   href,
   variant = "primary",
   className,
+  ...buttonProps
 }: {
   children: ReactNode;
   href?: string;
   variant?: Variant;
   className?: string;
-}) {
+} & ButtonHTMLAttributes<HTMLButtonElement>) {
   const classes = cn(
     "inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-callout font-medium transition-all duration-200",
     VARIANTS[variant],
@@ -37,5 +38,9 @@ export function Button({
       </Link>
     );
   }
-  return <button className={classes}>{children}</button>;
+  return (
+    <button type="button" className={classes} {...buttonProps}>
+      {children}
+    </button>
+  );
 }
