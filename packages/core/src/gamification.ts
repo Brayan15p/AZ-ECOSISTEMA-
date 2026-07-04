@@ -55,7 +55,7 @@ export interface LevelProgress {
 /** Calcula el nivel y el avance hacia el siguiente a partir del XP total. */
 export function levelFromXp(xp: number): LevelProgress {
   const safeXp = Math.max(0, Math.floor(xp || 0));
-  let level = ECO_LEVELS[0];
+  let level: EcoLevel = ECO_LEVELS[0]!;
   for (const l of ECO_LEVELS) if (safeXp >= l.floor) level = l;
   const next = ECO_LEVELS[level.index + 1] ?? null;
   const into = safeXp - level.floor;

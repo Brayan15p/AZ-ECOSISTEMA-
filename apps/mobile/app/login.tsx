@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { gray, green, navy, status } from "@az/ui-tokens";
+import { brand, gray, green, navy, status } from "@az/ui-tokens";
 import type { Role } from "@az/core";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -14,7 +14,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { Appear } from "../components/ui/Appear";
 import { Button } from "../components/ui/Button";
+import { LinearFade } from "../components/ui/LinearFade";
+import { PressableScale } from "../components/ui/PressableScale";
 import { useAuth } from "../lib/auth";
 
 export default function Login() {
@@ -28,40 +31,71 @@ export default function Login() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
-          contentContainerClassName="flex-grow justify-center gap-8 px-6 py-10"
+          contentContainerClassName="flex-grow justify-center gap-7 px-6 py-10"
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View className="gap-2">
-            <View className="mb-2 h-12 w-12 items-center justify-center rounded-2xl bg-brand">
-              <Text className="text-title3 text-white">AZ</Text>
-            </View>
-            <Text className="text-largeTitle text-text-primary">
-              AZ Ecosistema
-            </Text>
-            <Text className="text-body text-text-secondary">
-              Economía circular para Arauca.{" "}
-              {demo ? "Elige cómo quieres ingresar." : "Inicia sesión para continuar."}
-            </Text>
-          </View>
+          {/* ── Hero de marca: gradiente firma navy→eco + la idea central ── */}
+          <Appear>
+            <LinearFade colors={brand.gradient.signature} style={{ borderRadius: 28 }}>
+              <View className="gap-5 p-6">
+                <View
+                  className="h-14 w-14 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: "rgba(255,255,255,0.18)" }}
+                >
+                  <Text className="text-title2 text-white" style={{ fontWeight: "800", letterSpacing: 1 }}>
+                    AZ
+                  </Text>
+                </View>
+                <View className="gap-1">
+                  <Text className="text-largeTitle text-white">{brand.name}</Text>
+                  <Text className="text-callout text-white/85">{brand.tagline}</Text>
+                </View>
+                <View
+                  className="flex-row items-center gap-2 self-start rounded-full px-3 py-1.5"
+                  style={{ backgroundColor: "rgba(255,255,255,0.16)" }}
+                >
+                  <Ionicons name="sparkles" size={13} color="#FFFFFF" />
+                  <Text className="text-caption1 text-white/95">{brand.bigIdea}</Text>
+                </View>
+              </View>
+            </LinearFade>
+          </Appear>
 
-          {demo ? (
-            <DemoRolePicker
-              onPick={(role) => {
-                signInAsRole(role);
-                router.replace("/");
-              }}
-            />
-          ) : (
-            <PasswordForm
-              onSubmit={signInWithPassword}
-              onSuccess={() => router.replace("/")}
-              onDemo={() => {
-                signInAsRole("ciudadano");
-                router.replace("/");
-              }}
-            />
-          )}
+          {/* ── Encabezado de la acción ── */}
+          <Appear delay={90}>
+            <View className="gap-1 px-1">
+              <Text className="text-title3 text-text-primary">
+                {demo ? "¿Cómo quieres ingresar?" : "Inicia sesión"}
+              </Text>
+              <Text className="text-subhead text-text-secondary">
+                {demo
+                  ? "Elige tu rol para explorar la app."
+                  : "Entra con tu cuenta para continuar."}
+              </Text>
+            </View>
+          </Appear>
+
+          {/* ── Formulario / selector de rol ── */}
+          <Appear delay={150}>
+            {demo ? (
+              <DemoRolePicker
+                onPick={(role) => {
+                  signInAsRole(role);
+                  router.replace("/");
+                }}
+              />
+            ) : (
+              <PasswordForm
+                onSubmit={signInWithPassword}
+                onSuccess={() => router.replace("/")}
+                onDemo={() => {
+                  signInAsRole("ciudadano");
+                  router.replace("/");
+                }}
+              />
+            )}
+          </Appear>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -201,12 +235,11 @@ function RoleCard({
   onPress: () => void;
 }) {
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
-      accessibilityRole="button"
       accessibilityLabel={title}
       accessibilityHint={subtitle}
-      className="flex-row items-center gap-4 rounded-2xl border border-border bg-surface p-5 active:scale-[0.99] active:opacity-80"
+      className="flex-row items-center gap-4 rounded-2xl border border-border bg-surface p-5"
     >
       <View
         className="h-12 w-12 items-center justify-center rounded-xl"
@@ -219,6 +252,6 @@ function RoleCard({
         <Text className="text-subhead text-text-secondary">{subtitle}</Text>
       </View>
       <Ionicons name="chevron-forward" size={20} color={color} />
-    </Pressable>
+    </PressableScale>
   );
 }
