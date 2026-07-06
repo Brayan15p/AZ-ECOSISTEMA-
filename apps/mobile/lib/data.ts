@@ -181,15 +181,17 @@ function mapPayout(r: Row): Payout {
   };
 }
 
-function mapRouteStop(r: Row): RouteStop {
+function mapRouteStop(r: Row, collectedKg: Map<string, number>): RouteStop {
+  const id = str(r.id);
+  const kg = collectedKg.get(id) ?? null;
   return {
-    id: str(r.id),
+    id,
     owner: str(r.owner),
     address: str(r.address),
     zone: str(r.zone),
     score: num(r.score),
-    status: "pending", // aún no hay bitácora de recolección en BD
-    kg: null,
+    status: kg != null ? "collected" : "pending",
+    kg,
   };
 }
 
@@ -306,20 +308,54 @@ export function useRecycler(): AsyncResult<Recycler | null> {
 export function useRoute(zone: string | null): AsyncResult<RouteStop[]> {
   const { isRemote, profile } = useAuth();
   const tenantId = profile?.tenantId ?? null;
+  const recyclerId = profile?.recyclerId ?? null;
   const fetcher = useMemo(() => {
-    if (!isRemote || !tenantId || !zone) return null;
+    if (!isRemote || !tenantId || !zone || !recyclerId) return null;
     return async () => {
-      const { data, error } = await getSupabase()
-        .from("households")
-        .select("*")
-        .eq("tenant_id", tenantId)
-        .eq("zone", zone)
-        .order("owner", { ascending: true });
-      if (error) throw error;
-      return (data ?? []).map(mapRouteStop);
+      const sb = getSupabase();
+      const today = new Date().toISOString().slice(0, 10);
+      const [households, collected] = await Promise.all([
+        sb
+          .from("households")
+          .select("*")
+          .eq("tenant_id", tenantId)
+          .eq("zone", zone)
+          .order("owner", { ascending: true }),
+        sb
+          .from("collection_log")
+          .select("household_id, kg")
+          .eq("recycler_id", recyclerId)
+          .eq("collected_at", today),
+      ]);
+      if (households.error) throw households.error;
+      if (collected.error) throw collected.error;
+      const collectedKg = new Map(
+        (collected.data ?? []).map((c) => [str(c.household_id), num(c.kg)]),
+      );
+      return (households.data ?? []).map((r) => mapRouteStop(r, collectedKg));
     };
-  }, [isRemote, tenantId, zone]);
+  }, [isRemote, tenantId, zone, recyclerId]);
   return useAsyncData<RouteStop[]>(mock.mockRoute, fetcher);
+}
+
+// Errcodes que lanza el RPC `log_collection` (collection_log_and_payout_requests.sql).
+const LOG_COLLECTION_ERRORS: Record<string, string> = {
+  P0001: "Tu perfil no tiene un reciclador asociado.",
+  P0002: "El peso debe ser mayor a cero.",
+  P0003: "Ese hogar no pertenece a tu municipio.",
+};
+
+export async function logCollection(
+  householdId: string,
+  kg: number,
+): Promise<{ error: string | null }> {
+  const { error } = await getSupabase().rpc("log_collection", {
+    p_household_id: householdId,
+    p_kg: kg,
+  });
+  return {
+    error: error ? (LOG_COLLECTION_ERRORS[error.code ?? ""] ?? error.message) : null,
+  };
 }
 
 export function usePayouts(): AsyncResult<Payout[]> {

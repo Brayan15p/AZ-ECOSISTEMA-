@@ -5,6 +5,7 @@
  *   - 20260619000001_init.sql
  *   - 20260619000002_rls.sql
  *   - 20260628000001_security_p0.sql
+ *   - 20260705000001_collection_log_and_payout_requests.sql
  *
  * Para regenerar contra una BD real:
  *   pnpm db:types   (supabase gen types typescript --local)
@@ -672,12 +673,53 @@ export interface Database {
           { foreignKeyName: "payouts_recycler_id_fkey"; columns: ["recycler_id"]; referencedRelation: "recyclers"; referencedColumns: ["id"] },
         ];
       };
+      collection_log: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          recycler_id: string;
+          household_id: string;
+          kg: number;
+          collected_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          recycler_id: string;
+          household_id: string;
+          kg: number;
+          collected_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          recycler_id?: string;
+          household_id?: string;
+          kg?: number;
+          collected_at?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          { foreignKeyName: "collection_log_recycler_id_fkey"; columns: ["recycler_id"]; referencedRelation: "recyclers"; referencedColumns: ["id"] },
+          { foreignKeyName: "collection_log_household_id_fkey"; columns: ["household_id"]; referencedRelation: "households"; referencedColumns: ["id"] },
+        ];
+      };
     };
     Views: Record<never, never>;
     Functions: {
       redeem_catalog_item: {
         Args: { p_catalog_item_id: string };
         Returns: Database["public"]["Tables"]["redemptions"]["Row"];
+      };
+      log_collection: {
+        Args: { p_household_id: string; p_kg: number };
+        Returns: Database["public"]["Tables"]["collection_log"]["Row"];
+      };
+      request_payout: {
+        Args: Record<string, never>;
+        Returns: Database["public"]["Tables"]["payouts"]["Row"];
       };
     };
     Enums: {

@@ -20,12 +20,23 @@ import { Card } from "../../components/ui/Card";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { Screen } from "../../components/ui/Screen";
 import { ScreenSkeleton } from "../../components/ui/Skeleton";
+import { useAuth } from "../../lib/auth";
 import { usePayouts, useRecycler } from "../../lib/data";
+import { getSupabase } from "../../lib/supabase";
+
+// Errcodes que lanza el RPC `request_payout` (collection_log_and_payout_requests.sql).
+const RPC_ERRORS: Record<string, string> = {
+  P0001: "Tu perfil no tiene un reciclador asociado. Contacta a tu operador.",
+  P0002: "Ya existe una solicitud de liquidación para este periodo.",
+  P0003: "Aún no tienes kg recolectados registrados este periodo.",
+};
 
 export default function Liquidaciones() {
+  const { isRemote } = useAuth();
   const { data: r, loading } = useRecycler();
   const { data: payouts, error, reload } = usePayouts();
   const [requested, setRequested] = useState(false);
+  const [requesting, setRequesting] = useState(false);
 
   if (loading) return <ScreenSkeleton />;
   if (!r) {
@@ -40,19 +51,34 @@ export default function Liquidaciones() {
     );
   }
 
+  const doRequestPayout = async () => {
+    if (!isRemote) {
+      // Modo demo (sin Supabase configurado): no hay bitácora real de kg
+      // contra la que calcular la liquidación, así que solo confirmamos.
+      setRequested(true);
+      return;
+    }
+    setRequesting(true);
+    const { error: rpcError } = await getSupabase().rpc("request_payout");
+    setRequesting(false);
+    if (rpcError) {
+      Alert.alert(
+        "No se pudo solicitar",
+        RPC_ERRORS[rpcError.code ?? ""] ?? rpcError.message,
+      );
+      return;
+    }
+    setRequested(true);
+    reload();
+  };
+
   const requestPayout = () => {
     Alert.alert(
       "Solicitar liquidación",
       `Vas a solicitar el pago de ${formatCop(estimateMonthlyPayout(r.kgDay))} estimado este mes. ¿Confirmas?`,
       [
         { text: "Cancelar", style: "cancel" },
-        {
-          text: "Solicitar",
-          onPress: () => {
-            // TODO: crear la solicitud de payout (idempotente por periodo) en backend.
-            setRequested(true);
-          },
-        },
+        { text: "Solicitar", onPress: () => void doRequestPayout() },
       ],
     );
   };
@@ -103,7 +129,8 @@ export default function Liquidaciones() {
           variant={requested ? "secondary" : "success"}
           icon={requested ? "checkmark-circle" : "cash-outline"}
           title={requested ? "Solicitud enviada" : "Solicitar liquidación"}
-          disabled={requested}
+          disabled={requested || requesting}
+          loading={requesting}
           onPress={requestPayout}
         />
       </Card>
